@@ -3,7 +3,7 @@
 
 import assert from 'assert';
 
-import {act, renderHook} from '@testing-library/react-hooks'; // Use instead of react-native version due to different behavior. Consider migrating
+import {act, renderHook} from '@testing-library/react-hooks';
 import {createIntl} from 'react-intl';
 import InCallManager from 'react-native-incall-manager';
 
@@ -115,42 +115,12 @@ const addFakeCall = (serverUrl: string, channelId: string) => {
     const call: Call = {
         id: 'call',
         sessions: {
-            a23456abcdefghijklmnopqrs: {
-                sessionId: 'a23456abcdefghijklmnopqrs',
-                userId: 'xohi8cki9787fgiryne716u84o',
-                muted: false,
-                raisedHand: 0,
-            },
-            a12345667890bcdefghijklmn1: {
-                sessionId: 'a12345667890bcdefghijklmn1',
-                userId: 'xohi8cki9787fgiryne716u84o',
-                muted: true,
-                raisedHand: 0,
-            },
-            a12345667890bcdefghijklmn2: {
-                sessionId: 'a12345667890bcdefghijklmn2',
-                userId: 'xohi8cki9787fgiryne716u84o',
-                muted: false,
-                raisedHand: 0,
-            },
-            a12345667890bcdefghijklmn3: {
-                sessionId: 'a12345667890bcdefghijklmn3',
-                userId: 'xohi8cki9787fgiryne716u84o',
-                muted: true,
-                raisedHand: 0,
-            },
-            a12345667890bcdefghijklmn4: {
-                sessionId: 'a12345667890bcdefghijklmn4',
-                userId: 'xohi8cki9787fgiryne716u84o',
-                muted: false,
-                raisedHand: 0,
-            },
-            a12345667890bcdefghijklmn5: {
-                sessionId: 'a12345667890bcdefghijklmn5',
-                userId: 'xohi8cki9787fgiryne716u84o',
-                muted: true,
-                raisedHand: 0,
-            },
+            a23456abcdefghijklmnopqrs: {sessionId: 'a23456abcdefghijklmnopqrs', userId: 'xohi8cki9787fgiryne716u84o', muted: false, raisedHand: 0},
+            a12345667890bcdefghijklmn1: {sessionId: 'a12345667890bcdefghijklmn1', userId: 'xohi8cki9787fgiryne716u84o', muted: true, raisedHand: 0},
+            a12345667890bcdefghijklmn2: {sessionId: 'a12345667890bcdefghijklmn2', userId: 'xohi8cki9787fgiryne716u84o', muted: false, raisedHand: 0},
+            a12345667890bcdefghijklmn3: {sessionId: 'a12345667890bcdefghijklmn3', userId: 'xohi8cki9787fgiryne716u84o', muted: true, raisedHand: 0},
+            a12345667890bcdefghijklmn4: {sessionId: 'a12345667890bcdefghijklmn4', userId: 'xohi8cki9787fgiryne716u84o', muted: false, raisedHand: 0},
+            a12345667890bcdefghijklmn5: {sessionId: 'a12345667890bcdefghijklmn5', userId: 'xohi8cki9787fgiryne716u84o', muted: true, raisedHand: 0},
         },
         channelId,
         startTime: (new Date()).getTime(),
@@ -228,9 +198,9 @@ describe('Actions.Calls', () => {
 
         assert.equal(response!.data, 'channel-id');
         assert.equal((result.current[1] as CurrentCall).channelId, 'channel-id');
-        expect(newConnection).toHaveBeenCalled();
+        expect(newConnection).toBeCalled();
         expect(newConnection.mock.calls[0][1]).toBe('channel-id');
-        expect(updateThreadFollowing).toHaveBeenCalled();
+        expect(updateThreadFollowing).toBeCalled();
 
         await act(async () => {
             CallsActions.leaveCall();
@@ -259,7 +229,7 @@ describe('Actions.Calls', () => {
         assert.equal(response!.data, 'channel-id');
         assert.equal((result.current[1] as CurrentCall | null)?.channelId, 'channel-id');
 
-        expect(getConnectionForTesting()!.disconnect).not.toHaveBeenCalled();
+        expect(getConnectionForTesting()!.disconnect).not.toBeCalled();
         const disconnectMock = getConnectionForTesting()!.disconnect;
 
         await act(async () => {
@@ -269,7 +239,7 @@ describe('Actions.Calls', () => {
             myselfLeftCall();
         });
 
-        expect(disconnectMock).toHaveBeenCalled();
+        expect(disconnectMock).toBeCalled();
         expect(getConnectionForTesting()).toBe(null);
         assert.equal((result.current[1] as CurrentCall | null), null);
     });
@@ -300,7 +270,7 @@ describe('Actions.Calls', () => {
             CallsActions.muteMyself();
         });
 
-        expect(getConnectionForTesting()!.mute).toHaveBeenCalled();
+        expect(getConnectionForTesting()!.mute).toBeCalled();
 
         await act(async () => {
             CallsActions.leaveCall();
@@ -333,7 +303,7 @@ describe('Actions.Calls', () => {
             CallsActions.unmuteMyself();
         });
 
-        expect(getConnectionForTesting()!.unmute).toHaveBeenCalled();
+        expect(getConnectionForTesting()!.unmute).toBeCalled();
 
         await act(async () => {
             CallsActions.leaveCall();
@@ -349,7 +319,7 @@ describe('Actions.Calls', () => {
         await act(async () => {
             await CallsActions.loadCalls('server1', 'userId1');
         });
-        expect(mockClient.getCalls).toHaveBeenCalled();
+        expect(mockClient.getCalls).toBeCalled();
         assert.equal((result.current[0] as CallsState).calls['channel-1'].channelId, 'channel-1');
         assert.equal((result.current[0] as CallsState).enabled['channel-1'], true);
         assert.equal((result.current[1] as ChannelsWithCalls)['channel-1'], true);
@@ -377,7 +347,7 @@ describe('Actions.Calls', () => {
         await act(async () => {
             await CallsActions.loadCalls('server1', 'userId1');
         });
-        expect(mockClient.getCalls).toHaveBeenCalled();
+        expect(mockClient.getCalls).toBeCalled();
         assert.deepEqual((result.current[0] as CallsState), expectedCallsState);
         assert.deepEqual((result.current[1] as ChannelsWithCalls), {});
         assert.equal((result.current[2] as CurrentCall | null), null);
@@ -392,7 +362,7 @@ describe('Actions.Calls', () => {
         await act(async () => {
             await CallsActions.loadConfig('server1');
         });
-        expect(mockClient.getCallsConfig).toHaveBeenCalledWith();
+        expect(mockClient.getCallsConfig).toBeCalledWith();
         assert.equal(result.current.DefaultEnabled, true);
         assert.equal(result.current.AllowEnableCalls, true);
     });
@@ -404,7 +374,7 @@ describe('Actions.Calls', () => {
         await act(async () => {
             await CallsActions.enableChannelCalls('server1', 'channel-1', true);
         });
-        expect(mockClient.enableChannelCalls).toHaveBeenCalledWith('channel-1', true);
+        expect(mockClient.enableChannelCalls).toBeCalledWith('channel-1', true);
         assert.equal(result.current.enabled['channel-1'], true);
     });
 
@@ -415,13 +385,13 @@ describe('Actions.Calls', () => {
         await act(async () => {
             await CallsActions.enableChannelCalls('server1', 'channel-1', true);
         });
-        expect(mockClient.enableChannelCalls).toHaveBeenCalledWith('channel-1', true);
+        expect(mockClient.enableChannelCalls).toBeCalledWith('channel-1', true);
         assert.equal(result.current.enabled['channel-1'], true);
         mockClient.enableChannelCalls.mockReturnValueOnce({enabled: false});
         await act(async () => {
             await CallsActions.enableChannelCalls('server1', 'channel-1', false);
         });
-        expect(mockClient.enableChannelCalls).toHaveBeenCalledWith('channel-1', false);
+        expect(mockClient.enableChannelCalls).toBeCalledWith('channel-1', false);
         assert.equal(result.current.enabled['channel-1'], false);
     });
 
@@ -430,8 +400,8 @@ describe('Actions.Calls', () => {
             await CallsActions.startCallRecording('server1', 'channel-id');
         });
 
-        expect(mockClient.startCallRecording).toHaveBeenCalledWith('channel-id');
-        expect(needsRecordingErrorAlert).toHaveBeenCalled();
+        expect(mockClient.startCallRecording).toBeCalledWith('channel-id');
+        expect(needsRecordingErrorAlert).toBeCalled();
     });
 
     it('stopCallRecording', async () => {
@@ -439,9 +409,9 @@ describe('Actions.Calls', () => {
             await CallsActions.stopCallRecording('server1', 'channel-id');
         });
 
-        expect(mockClient.stopCallRecording).toHaveBeenCalledWith('channel-id');
-        expect(needsRecordingErrorAlert).toHaveBeenCalled();
-        expect(needsRecordingWillBePostedAlert).toHaveBeenCalled();
+        expect(mockClient.stopCallRecording).toBeCalledWith('channel-id');
+        expect(needsRecordingErrorAlert).toBeCalled();
+        expect(needsRecordingWillBePostedAlert).toBeCalled();
     });
 
     it('dismissIncomingCall', async () => {
@@ -449,7 +419,7 @@ describe('Actions.Calls', () => {
             await CallsActions.dismissIncomingCall('server1', 'channel-id');
         });
 
-        expect(mockClient.dismissCall).toHaveBeenCalledWith('channel-id');
+        expect(mockClient.dismissCall).toBeCalledWith('channel-id');
     });
 
     it('userLeftChannelErr', async () => {
@@ -476,20 +446,20 @@ describe('Actions.Calls', () => {
 
         assert.equal(response!.data, 'channel-id');
         assert.equal((result.current[1] as CurrentCall).channelId, 'channel-id');
-        expect(newConnection).toHaveBeenCalled();
+        expect(newConnection).toBeCalled();
         expect(newConnection.mock.calls[0][1]).toBe('channel-id');
-        expect(updateThreadFollowing).toHaveBeenCalled();
+        expect(updateThreadFollowing).toBeCalled();
 
         await act(async () => {
             CallsActions.leaveCall(userLeftChannelErr);
         });
 
-        expect(intl.formatMessage).toHaveBeenCalledWith({
+        expect(intl.formatMessage).toBeCalledWith({
             id: 'mobile.calls_user_left_channel_error_title',
             defaultMessage: 'You left the channel',
         });
 
-        expect(intl.formatMessage).toHaveBeenCalledWith({
+        expect(intl.formatMessage).toBeCalledWith({
             id: 'mobile.calls_user_left_channel_error_message',
             defaultMessage: 'You have left the channel, and have been disconnected from the call.',
         });
@@ -519,20 +489,20 @@ describe('Actions.Calls', () => {
 
         assert.equal(response!.data, 'channel-id');
         assert.equal((result.current[1] as CurrentCall).channelId, 'channel-id');
-        expect(newConnection).toHaveBeenCalled();
+        expect(newConnection).toBeCalled();
         expect(newConnection.mock.calls[0][1]).toBe('channel-id');
-        expect(updateThreadFollowing).toHaveBeenCalled();
+        expect(updateThreadFollowing).toBeCalled();
 
         await act(async () => {
             CallsActions.leaveCall(userRemovedFromChannelErr);
         });
 
-        expect(intl.formatMessage).toHaveBeenCalledWith({
+        expect(intl.formatMessage).toBeCalledWith({
             id: 'mobile.calls_user_removed_from_channel_error_title',
             defaultMessage: 'You were removed from channel',
         });
 
-        expect(intl.formatMessage).toHaveBeenCalledWith({
+        expect(intl.formatMessage).toBeCalledWith({
             id: 'mobile.calls_user_removed_from_channel_error_message',
             defaultMessage: 'You have been removed from the channel, and have been disconnected from the call.',
         });
@@ -562,14 +532,14 @@ describe('Actions.Calls', () => {
 
         assert.equal(response!.data, 'channel-id');
         assert.equal((result.current[1] as CurrentCall).channelId, 'channel-id');
-        expect(newConnection).toHaveBeenCalled();
+        expect(newConnection).toBeCalled();
         expect(newConnection.mock.calls[0][1]).toBe('channel-id');
-        expect(updateThreadFollowing).toHaveBeenCalled();
+        expect(updateThreadFollowing).toBeCalled();
 
         await act(async () => {
             CallsActions.leaveCall(new Error('generic error'));
         });
 
-        expect(errorAlert).toHaveBeenCalled();
+        expect(errorAlert).toBeCalled();
     });
 });

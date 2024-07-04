@@ -9,10 +9,10 @@ import SlideUpPanelItem from '@components/slide_up_panel_item';
 import {dismissBottomSheet} from '@screens/navigation';
 
 import type PickerUtil from '@utils/file/file_picker';
-import type {ImageSource} from 'expo-image';
+import type {Source} from 'react-native-fast-image';
 
 type PanelType = {
-    icon: string | ImageSource;
+    icon: string | Source;
     onPress: () => Promise<void> | void;
     testID: string;
     text: MessageDescriptor;

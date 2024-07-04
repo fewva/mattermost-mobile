@@ -3,7 +3,7 @@
 
 import Emm from '@mattermost/react-native-emm';
 import deepEqual from 'deep-equal';
-import {isRootedExperimentalAsync} from 'expo-device';
+import JailMonkey from 'jail-monkey';
 import {Alert, type AlertButton, AppState, type AppStateStatus, Platform} from 'react-native';
 
 import {DEFAULT_LOCALE, getTranslations, t} from '@i18n';
@@ -77,7 +77,7 @@ class ManagedApp {
         }
 
         const jailbreakProtection = config!.jailbreakProtection === 'true';
-        if (jailbreakProtection && (await isRootedExperimentalAsync())) {
+        if (jailbreakProtection && !this.isTrustedDevice()) {
             this.alertDeviceIsNotTrusted();
             return;
         }
@@ -96,7 +96,9 @@ class ManagedApp {
         Alert.alert(
             translations[t('mobile.managed.blocked_by')].replace('{vendor}', this.vendor),
             translations[t('mobile.managed.jailbreak')].
-                replace('{vendor}', this.vendor),
+                replace('{vendor}', this.vendor).
+                replace('{reason}', JailMonkey.jailBrokenMessage() || translations[t('mobile.managed.jailbreak_no_reason')]).
+                replace('{debug}', JSON.stringify(JailMonkey.androidRootedDetectionMethods || translations[t('mobile.managed.jailbreak_no_debug_info')])),
             [{
                 text: translations[t('mobile.managed.exit')],
                 style: 'destructive',
@@ -137,6 +139,10 @@ class ManagedApp {
         }
 
         this.performingAuthentication = false;
+    };
+
+    isTrustedDevice = () => {
+        return __DEV__ || !JailMonkey.isJailBroken();
     };
 
     onAppStateChange = async (appState: AppStateStatus) => {

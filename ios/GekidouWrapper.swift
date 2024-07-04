@@ -23,10 +23,6 @@ import Gekidou
     })
   }
   
-  @objc func verifySignature(_ notification: [AnyHashable:Any]) -> Bool {
-    return PushNotification.default.verifySignature(notification)
-  }
-  
   @objc func attachSession(_ id: String, completionHandler: @escaping () -> Void) {
     let shareExtension = ShareExtension()
     shareExtension.attachSession(

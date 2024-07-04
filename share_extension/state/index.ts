@@ -1,23 +1,14 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import MattermostShare, {type ShareExtensionDataToSend, type SharedItem} from '@mattermost/rnshare';
 import {useEffect, useState} from 'react';
+import {NativeModules} from 'react-native';
 import {BehaviorSubject} from 'rxjs';
 
-interface ShareExtensionState {
-    channelId?: string;
-    closeExtension: (data: ShareExtensionDataToSend|null) => void;
-    files: SharedItem[];
-    globalError: boolean;
-    linkPreviewUrl?: string;
-    message?: string;
-    serverUrl?: string;
-    userId?: string;
-}
+const ShareModule: NativeShareExtension = NativeModules.MattermostShare;
 
 const defaultState: ShareExtensionState = {
-    closeExtension: MattermostShare.close,
+    closeExtension: ShareModule.close,
     channelId: undefined,
     files: [],
     globalError: false,

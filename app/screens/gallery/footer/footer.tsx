@@ -125,10 +125,10 @@ const Footer = ({
             <View style={styles.container}>
                 <View style={styles.details}>
                     {item.type !== 'avatar' &&
-                        <Avatar
-                            author={author}
-                            overrideIconUrl={overrideIconUrl}
-                        />
+                    <Avatar
+                        authorId={author?.id}
+                        overrideIconUrl={overrideIconUrl}
+                    />
                     }
                     <Details
                         channelName={item.type === 'avatar' ? '' : channelName}

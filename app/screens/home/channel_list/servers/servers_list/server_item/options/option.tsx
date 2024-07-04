@@ -33,7 +33,7 @@ const getStyleSheet = makeStyleSheetFromTheme((theme: Theme) => ({
         width: OPTION_SIZE,
     },
     text: {
-        color: theme.buttonColor,
+        color: theme.sidebarText,
         ...typography('Body', 75, 'SemiBold'),
     },
 }));

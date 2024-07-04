@@ -3,7 +3,7 @@
 
 import {makeCallsBaseAndBadgeRGB, rgbToCSS} from '@mattermost/calls';
 import {Alert} from 'react-native';
-import {SelectedTrackType, TextTrackType, type ISO639_1, type SelectedTrack, type TextTracks} from 'react-native-video';
+import {TextTrackType} from 'react-native-video';
 
 import {buildFileUrl} from '@actions/remote/file';
 import {Calls, Post} from '@constants';
@@ -11,12 +11,7 @@ import {NOTIFICATION_SUB_TYPE} from '@constants/push_notification';
 import {isMinimumServerVersion} from '@utils/helpers';
 import {displayUsername} from '@utils/user';
 
-import type {
-    CallsConfigState,
-    CallSession,
-    CallsTheme,
-    CallsVersion,
-} from '@calls/types/calls';
+import type {CallSession, CallsTheme, CallsVersion, SelectedSubtitleTrack, SubtitleTrack} from '@calls/types/calls';
 import type {CallsConfig, Caption} from '@mattermost/calls/lib/types';
 import type PostModel from '@typings/database/models/servers/post';
 import type UserModel from '@typings/database/models/servers/user';
@@ -102,10 +97,6 @@ export function isMultiSessionSupported(callsVersion: CallsVersion) {
         Calls.MultiSessionCallsVersion.MIN_VERSION,
         Calls.MultiSessionCallsVersion.PATCH_VERSION,
     );
-}
-
-export function isHostControlsAllowed(config: CallsConfigState) {
-    return Boolean(config.HostControlsAllowed);
 }
 
 export function isCallsCustomMessage(post: PostModel | Post): boolean {
@@ -218,27 +209,27 @@ export const hasCaptions = (postProps?: Record<string, any> & { captions?: Capti
 };
 
 export const getTranscriptionUri = (serverUrl: string, postProps?: Record<string, any> & { captions?: Caption[] }): {
-    tracks?: TextTracks;
-    selected: SelectedTrack;
+    tracks?: SubtitleTrack[];
+    selected: SelectedSubtitleTrack;
 } => {
     // Note: We're not using hasCaptions above because this tells typescript that the caption exists later.
     // We could use some fancy typescript to do the same, but it's not worth the complexity.
     if (!postProps || !postProps.captions?.[0]) {
         return {
             tracks: undefined,
-            selected: {type: SelectedTrackType.DISABLED, value: ''},
+            selected: {type: 'disabled'},
         };
     }
 
-    const tracks: TextTracks = postProps.captions.map((t) => ({
+    const tracks: SubtitleTrack[] = postProps.captions.map((t) => ({
         title: t.title,
-        language: t.language as ISO639_1,
+        language: t.language,
         type: TextTrackType.VTT,
         uri: buildFileUrl(serverUrl, t.file_id),
     }));
 
     return {
         tracks,
-        selected: {type: SelectedTrackType.INDEX, value: 0},
+        selected: {type: 'index', value: 0},
     };
 };

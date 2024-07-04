@@ -1,9 +1,12 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
+<<<<<<< HEAD
+=======
 import {applicationId} from 'expo-application';
-import {randomUUID} from 'expo-crypto';
+>>>>>>> parent of b7791add (Use UUID native functions (#8032))
 import {createIntl} from 'react-intl';
+import DeviceInfo from 'react-native-device-info';
 import ReactNativeHapticFeedback, {HapticFeedbackTypes} from 'react-native-haptic-feedback';
 
 import {getTranslations} from '@i18n';
@@ -26,7 +29,22 @@ export function emptyFunction(..._args: any[]) {
 
 // Generates a RFC-4122 version 4 compliant globally unique identifier.
 export const generateId = (prefix?: string): string => {
-    const id = randomUUID();
+    // implementation taken from http://stackoverflow.com/a/2117523
+    let id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
+    id = id.replace(/[xy]/g, (c) => {
+        const r = Math.floor(Math.random() * 16);
+        let v;
+
+        if (c === 'x') {
+            v = r;
+        } else {
+            // eslint-disable-next-line no-mixed-operators
+            v = (r & 0x3) | 0x8;
+        }
+
+        return v.toString(16);
+    });
+
     if (prefix) {
         return `${prefix}-${id}`;
     }
@@ -49,4 +67,4 @@ export const sortByNewest = (a: SortByCreatAt, b: SortByCreatAt) => {
     return 1;
 };
 
-export const isBetaApp = applicationId && applicationId.includes('rnbeta');
+export const isBetaApp = DeviceInfo.getBundleId && DeviceInfo.getBundleId().includes('rnbeta');

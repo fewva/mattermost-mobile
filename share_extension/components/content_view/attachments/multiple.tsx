@@ -10,8 +10,6 @@ import {typography} from '@utils/typography';
 
 import Single from './single';
 
-import type {SharedItem} from '@mattermost/rnshare';
-
 type Props = {
     files: SharedItem[];
     maxFileSize: number;

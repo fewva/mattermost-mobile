@@ -1,14 +1,13 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import RNUtils from '@mattermost/rnutils';
 import {CameraRoll} from '@react-native-camera-roll/camera-roll';
-import {applicationName} from 'expo-application';
-import {deleteAsync} from 'expo-file-system';
 import React, {useEffect, useRef, useState} from 'react';
 import {useIntl} from 'react-intl';
-import {Platform, StyleSheet, Text, View} from 'react-native';
+import {NativeModules, Platform, StyleSheet, Text, View} from 'react-native';
+import DeviceInfo from 'react-native-device-info';
 import FileViewer from 'react-native-file-viewer';
+import FileSystem from 'react-native-fs';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 import {useAnimatedStyle, withTiming} from 'react-native-reanimated';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -132,7 +131,7 @@ const DownloadWithAction = ({action, item, onDownloadSuccess, setAction, gallery
             downloadPromise.current?.cancel?.();
             const path = getLocalFilePathFromFile(serverUrl, galleryItemToFileInfo(item));
             downloadPromise.current = undefined;
-            await deleteAsync(path);
+            await FileSystem.unlink(path);
         } catch {
             // do nothing
         } finally {
@@ -171,7 +170,7 @@ const DownloadWithAction = ({action, item, onDownloadSuccess, setAction, gallery
         if (mounted.current) {
             if (Platform.OS === 'android') {
                 try {
-                    await RNUtils.saveFile(path);
+                    await NativeModules.MattermostManaged.saveFile(path);
                 } catch {
                     // do nothing in case the user decides not to save the file
                 }
@@ -195,10 +194,11 @@ const DownloadWithAction = ({action, item, onDownloadSuccess, setAction, gallery
     const saveImageOrVideo = async (path: string) => {
         if (mounted.current) {
             try {
+                const applicationName = DeviceInfo.getApplicationName();
                 const cameraType = item.type === 'avatar' ? 'image' : item.type;
-                await CameraRoll.saveAsset(path, {
+                await CameraRoll.save(path, {
                     type: cameraType === 'image' ? 'photo' : 'video',
-                    album: applicationName || '',
+                    album: applicationName,
                 });
                 setSaved(true);
                 if (item.type !== 'avatar') {

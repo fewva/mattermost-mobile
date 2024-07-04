@@ -3,48 +3,40 @@
 
 import React from 'react';
 
-import Preferences from '@constants/preferences';
+import {Preferences, Screens} from '@constants';
+import LaunchType from '@constants/launch';
 import {renderWithIntl} from '@test/intl-test-helper';
 
-import SSOAuthentication from './sso_authentication';
+import SSOLogin from './index';
 
-jest.mock('@utils/url', () => {
+jest.mock('@screens/navigation', () => {
     return {
-        tryOpenURL: () => null,
+        getThemeFromState: () => 'light',
     };
 });
 
-describe('SSO with redirect url', () => {
+jest.mock('@utils/url', () => {
+    return {
+        tryOpenURL: () => true,
+    };
+});
+
+describe('SSO', () => {
     const baseProps = {
-        customUrlScheme: 'mmauthbeta://',
-        doSSOLogin: jest.fn(),
-        intl: {},
-        loginError: '',
-        loginUrl: '',
-        serverUrl: 'http://localhost:8065',
-        setLoginError: jest.fn(),
+        componentId: Screens.SSO,
+        license: {
+            IsLicensed: 'true',
+        },
+        ssoType: 'GITLAB',
         theme: Preferences.THEMES.denim,
+        serverUrl: 'https://locahost:8065',
+        serverDisplayName: 'Test Server',
+        launchType: LaunchType.Normal,
     };
 
-    test('should show message when user navigates to the page', () => {
-        const {getByTestId} = renderWithIntl(<SSOAuthentication {...baseProps}/>);
-        expect(getByTestId('mobile.oauth.switch_to_browser')).toBeDefined();
-    });
-
-    test('should show "try again" and hide default message when error text is displayed', () => {
-        const {getByTestId} = renderWithIntl(
-            <SSOAuthentication
-                {...baseProps}
-                loginError='some error'
-            />,
-        );
-        expect(getByTestId('mobile.oauth.try_again')).toBeDefined();
-        let browser;
-        try {
-            browser = getByTestId('mobile.oauth.switch_to_browser');
-        } catch (error) {
-            // do nothing
-        }
-        expect(browser).toBeUndefined();
+    test('implement with OS browser & redirect url from version 5.33', async () => {
+        const props = {...baseProps, config: {Version: '5.36.0'}};
+        const {getByTestId} = renderWithIntl(<SSOLogin {...props}/>);
+        expect(getByTestId('sso.redirect_url')).toBeTruthy();
     });
 });

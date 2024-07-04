@@ -8,7 +8,7 @@ import {useTheme} from '@context/theme';
 import {changeOpacity, makeStyleSheetFromTheme} from '@utils/theme';
 import {typography} from '@utils/typography';
 
-import EmptyIllustration from './empty';
+import EmptyIllustration from './empty.svg';
 
 const getStyleSheet = makeStyleSheetFromTheme((theme) => ({
     container: {

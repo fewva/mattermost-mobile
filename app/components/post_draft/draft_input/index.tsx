@@ -28,7 +28,6 @@ type Props = {
     testID?: string;
     channelId: string;
     channelType?: ChannelType;
-    channelName?: string;
     rootId?: string;
     currentUserId: string;
     canShowPostPriority?: boolean;
@@ -109,7 +108,6 @@ export default function DraftInput({
     testID,
     channelId,
     channelType,
-    channelName,
     currentUserId,
     canShowPostPriority,
     files,
@@ -166,7 +164,7 @@ export default function DraftInput({
 
     const handleSendMessage = useCallback(async () => {
         if (persistentNotificationsEnabled) {
-            persistentNotificationsConfirmation(serverUrl, value, mentionsList, intl, sendMessage, persistentNotificationMaxRecipients, persistentNotificationInterval, currentUserId, channelName, channelType);
+            persistentNotificationsConfirmation(serverUrl, value, mentionsList, intl, sendMessage, persistentNotificationMaxRecipients, persistentNotificationInterval, channelType);
         } else {
             sendMessage();
         }

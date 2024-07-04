@@ -48,7 +48,7 @@ export const apiCreateUser = async (baseUrl: string, {prefix = 'user', user = nu
             newUser,
         );
 
-        return {user: {...response.data, newUser}};
+        return {user: {...response.data, password: newUser.password}};
     } catch (err) {
         return getResponseFromError(err);
     }

@@ -1,20 +1,18 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import {Image} from 'expo-image';
-import React from 'react';
+import React, {useMemo} from 'react';
 import {StyleSheet, View} from 'react-native';
+import FastImage from 'react-native-fast-image';
 
 import {buildAbsoluteUrl} from '@actions/remote/file';
-import {buildProfileImageUrlFromUser} from '@actions/remote/user';
-import {useServerUrl} from '@app/context/server';
+import {buildProfileImageUrl} from '@actions/remote/user';
 import CompassIcon from '@components/compass_icon';
+import {useServerUrl} from '@context/server';
 import {changeOpacity} from '@utils/theme';
 
-import type UserModel from '@typings/database/models/servers/user';
-
 type Props = {
-    author?: UserModel;
+    authorId?: string;
     overrideIconUrl?: string;
 }
 
@@ -34,22 +32,28 @@ const styles = StyleSheet.create({
     },
 });
 
-const Avatar = ({
-    author,
-    overrideIconUrl,
-}: Props) => {
+const Avatar = ({authorId, overrideIconUrl}: Props) => {
     const serverUrl = useServerUrl();
+    const avatarUri = useMemo(() => {
+        try {
+            if (overrideIconUrl) {
+                return buildAbsoluteUrl(serverUrl, overrideIconUrl);
+            } else if (authorId) {
+                const pictureUrl = buildProfileImageUrl(serverUrl, authorId);
+                return `${serverUrl}${pictureUrl}`;
+            }
 
-    let uri = overrideIconUrl;
-    if (!uri && author) {
-        uri = buildProfileImageUrlFromUser(serverUrl, author);
-    }
+            return undefined;
+        } catch {
+            return undefined;
+        }
+    }, [serverUrl, authorId, overrideIconUrl]);
 
     let picture;
-    if (uri) {
+    if (avatarUri) {
         picture = (
-            <Image
-                source={{uri: buildAbsoluteUrl(serverUrl, uri)}}
+            <FastImage
+                source={{uri: avatarUri}}
                 style={[styles.avatar, styles.avatarRadius]}
             />
         );

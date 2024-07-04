@@ -5,7 +5,7 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {type StyleProp, StyleSheet, type ViewStyle, DeviceEventEmitter} from 'react-native';
 import {type Edge, SafeAreaView} from 'react-native-safe-area-context';
 
-import {markChannelAsRead, unsetActiveChannelOnServer} from '@actions/remote/channel';
+import {markChannelAsRead} from '@actions/remote/channel';
 import {fetchPosts, fetchPostsBefore} from '@actions/remote/post';
 import {PER_PAGE_DEFAULT} from '@client/rest/constants';
 import PostList from '@components/post_list';
@@ -84,27 +84,12 @@ const ChannelPostList = ({
         }
     }, [fetchingPosts, posts]);
 
-    useDidUpdate(() => {
+    useEffect(() => {
         if (oldPostsCount.current < posts.length && appState === 'active') {
             oldPostsCount.current = posts.length;
             markChannelAsRead(serverUrl, channelId, true);
         }
-    }, [posts.length]);
-
-    useDidUpdate(() => {
-        if (appState === 'active') {
-            markChannelAsRead(serverUrl, channelId, true);
-        }
-        if (appState !== 'active') {
-            unsetActiveChannelOnServer(serverUrl);
-        }
-    }, [appState === 'active']);
-
-    useEffect(() => {
-        return () => {
-            unsetActiveChannelOnServer(serverUrl);
-        };
-    }, []);
+    }, [isCRTEnabled, posts, channelId, serverUrl, appState === 'active']);
 
     const intro = (<Intro channelId={channelId}/>);
 
