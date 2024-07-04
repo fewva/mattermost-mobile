@@ -1,10 +1,10 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import {Image} from 'expo-image';
 import React, {forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState} from 'react';
 import {BackHandler} from 'react-native';
-import Animated, {runOnJS, runOnUI, useAnimatedReaction} from 'react-native-reanimated';
+import FastImage, {type ImageStyle} from 'react-native-fast-image';
+import Animated, {runOnJS, runOnUI, useAnimatedReaction, type AnimatedStyle} from 'react-native-reanimated';
 
 import {useGallery} from '@context/gallery';
 import {freezeOtherScreens, measureItem} from '@utils/gallery';
@@ -18,7 +18,8 @@ import GalleryViewer from './viewer';
 import type {ImageRendererProps} from './image_renderer';
 import type {GalleryItemType} from '@typings/screens/gallery';
 
-const AnimatedImage = Animated.createAnimatedComponent(Image);
+// @ts-expect-error FastImage does work with Animated.createAnimatedComponent
+const AnimatedImage = Animated.createAnimatedComponent(FastImage);
 
 interface GalleryProps {
     galleryIdentifier: string;
@@ -147,7 +148,7 @@ const Gallery = forwardRef<GalleryRef, GalleryProps>(({
             return (
                 <AnimatedImage
                     source={{uri: item.posterUri}}
-                    style={info.itemStyles}
+                    style={info.itemStyles as AnimatedStyle<ImageStyle>}
                 />
             );
         }

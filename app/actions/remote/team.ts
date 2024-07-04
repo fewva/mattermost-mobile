@@ -229,7 +229,7 @@ export async function fetchMyTeam(serverUrl: string, teamId: string, fetchOnly =
     }
 }
 
-export const fetchAllTeams = async (serverUrl: string, page = 0, perPage = PER_PAGE_DEFAULT): Promise<{teams?: Team[]; error?: unknown}> => {
+export const fetchAllTeams = async (serverUrl: string, page = 0, perPage = PER_PAGE_DEFAULT): Promise<{teams?: Team[]; error?: any}> => {
     try {
         const client = NetworkManager.getClient(serverUrl);
         const teams = await client.getTeams(page, perPage);
@@ -475,12 +475,3 @@ export async function getTeamMembersByIds(serverUrl: string, teamId: string, use
         return {error};
     }
 }
-
-export const buildTeamIconUrl = (serverUrl: string, teamId: string, timestamp = 0) => {
-    try {
-        const client = NetworkManager.getClient(serverUrl);
-        return client.getTeamIconUrl(teamId, timestamp);
-    } catch (error) {
-        return '';
-    }
-};

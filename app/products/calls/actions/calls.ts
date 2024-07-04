@@ -8,7 +8,6 @@ import {forceLogoutIfNecessary} from '@actions/remote/session';
 import {updateThreadFollowing} from '@actions/remote/thread';
 import {fetchUsersByIds} from '@actions/remote/user';
 import {
-    endCallConfirmationAlert,
     leaveAndJoinWithAlert,
     needsRecordingErrorAlert,
     needsRecordingWillBePostedAlert,
@@ -29,7 +28,6 @@ import {
     setScreenShareURL,
     setSpeakerPhone,
 } from '@calls/state';
-import {type AudioDevice, type Call, type CallSession, type CallsConnection, EndCallReturn} from '@calls/types/calls';
 import {General, Preferences} from '@constants';
 import Calls from '@constants/calls';
 import DatabaseManager from '@database/manager';
@@ -46,6 +44,7 @@ import {displayUsername, getUserIdFromChannelName, isSystemAdmin} from '@utils/u
 
 import {newConnection} from '../connection/connection';
 
+import type {AudioDevice, Call, CallSession, CallsConnection} from '@calls/types/calls';
 import type {CallChannelState, CallState, EmojiData, SessionState} from '@mattermost/calls/lib/types';
 import type {IntlShape} from 'react-intl';
 
@@ -133,7 +132,7 @@ export const loadCallForChannel = async (serverUrl: string, channelId: string) =
         fetchUsersByIds(serverUrl, Array.from(ids));
     }
 
-    setCallForChannel(serverUrl, channelId, call, resp.enabled);
+    setCallForChannel(serverUrl, channelId, resp.enabled, call);
 
     return {data: {call, enabled: resp.enabled}};
 };
@@ -161,12 +160,11 @@ const convertOldCallToNew = (call: CallState): CallState => {
     };
 };
 
-export const createCallAndAddToIds = (channelId: string, call: CallState, ids?: Set<string>) => {
-    // Don't cast so that we get alerted to missing types
-    const convertedCall: Call = {
+const createCallAndAddToIds = (channelId: string, call: CallState, ids: Set<string>) => {
+    return {
         sessions: Object.values(call.sessions).reduce((accum, cur) => {
             // Add the id to the set of UserModels we want to ensure are loaded.
-            ids?.add(cur.user_id);
+            ids.add(cur.user_id);
 
             // Create the CallParticipant
             accum[cur.session_id] = {
@@ -186,9 +184,7 @@ export const createCallAndAddToIds = (channelId: string, call: CallState, ids?: 
         hostId: call.host_id,
         recState: call.recording,
         dismissed: call.dismissed_notification || {},
-    };
-
-    return convertedCall;
+    } as Call;
 };
 
 export const loadConfigAndCalls = async (serverUrl: string, userId: string) => {
@@ -306,29 +302,6 @@ export const leaveCall = (err?: Error) => {
     }
 };
 
-export const leaveCallConfirmation = async (
-    intl: IntlShape,
-    otherParticipants: boolean,
-    isAdmin: boolean,
-    isHost: boolean,
-    serverUrl: string,
-    channelId: string,
-    leaveCb?: () => void) => {
-    const showHostControls = (isHost || isAdmin) && otherParticipants;
-    const ret = await endCallConfirmationAlert(intl, showHostControls) as EndCallReturn;
-    switch (ret) {
-        case EndCallReturn.Cancel:
-            return;
-        case EndCallReturn.LeaveCall:
-            leaveCall();
-            leaveCb?.();
-            return;
-        case EndCallReturn.EndCall:
-            endCall(serverUrl, channelId);
-            leaveCb?.();
-    }
-};
-
 export const muteMyself = () => {
     if (connection) {
         connection.mute();
@@ -390,7 +363,7 @@ export const canEndCall = async (serverUrl: string, channelId: string) => {
         return false;
     }
 
-    return isSystemAdmin(currentUser.roles) || currentUser.id === call.hostId;
+    return isSystemAdmin(currentUser.roles) || currentUser.id === call.ownerId;
 };
 
 export const getEndCallMessage = async (serverUrl: string, channelId: string, currentUserId: string, intl: IntlShape) => {
@@ -645,70 +618,4 @@ const handleEndCall = async (serverUrl: string, channelId: string, currentUserId
             },
         ],
     );
-};
-
-export const hostMake = async (serverUrl: string, callId: string, newHostId: string) => {
-    try {
-        const client = NetworkManager.getClient(serverUrl);
-        return client.hostMake(callId, newHostId);
-    } catch (error) {
-        logDebug('error on hostMake', getFullErrorMessage(error));
-        await forceLogoutIfNecessary(serverUrl, error);
-        return error;
-    }
-};
-
-export const hostMuteSession = async (serverUrl: string, callId: string, sessionId: string) => {
-    try {
-        const client = NetworkManager.getClient(serverUrl);
-        return client.hostMute(callId, sessionId);
-    } catch (error) {
-        logDebug('error on hostMute', getFullErrorMessage(error));
-        await forceLogoutIfNecessary(serverUrl, error);
-        return error;
-    }
-};
-
-export const hostMuteOthers = async (serverUrl: string, callId: string) => {
-    try {
-        const client = NetworkManager.getClient(serverUrl);
-        return client.hostMuteOthers(callId);
-    } catch (error) {
-        logDebug('error on hostMuteOthers', getFullErrorMessage(error));
-        await forceLogoutIfNecessary(serverUrl, error);
-        return error;
-    }
-};
-
-export const hostStopScreenshare = async (serverUrl: string, callId: string, sessionId: string) => {
-    try {
-        const client = NetworkManager.getClient(serverUrl);
-        return client.hostScreenOff(callId, sessionId);
-    } catch (error) {
-        logDebug('error on hostStopScreenshare', getFullErrorMessage(error));
-        await forceLogoutIfNecessary(serverUrl, error);
-        return error;
-    }
-};
-
-export const hostLowerHand = async (serverUrl: string, callId: string, sessionId: string) => {
-    try {
-        const client = NetworkManager.getClient(serverUrl);
-        return client.hostLowerHand(callId, sessionId);
-    } catch (error) {
-        logDebug('error on hostLowerHand', getFullErrorMessage(error));
-        await forceLogoutIfNecessary(serverUrl, error);
-        return error;
-    }
-};
-
-export const hostRemove = async (serverUrl: string, callId: string, sessionId: string) => {
-    try {
-        const client = NetworkManager.getClient(serverUrl);
-        return client.hostRemove(callId, sessionId);
-    } catch (error) {
-        logDebug('error on hostRemove', getFullErrorMessage(error));
-        await forceLogoutIfNecessary(serverUrl, error);
-        return error;
-    }
 };

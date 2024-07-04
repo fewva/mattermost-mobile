@@ -30,11 +30,3 @@ fun queryConfigDisplayNameSetting(db: WMDatabase): String? {
 
     return null
 }
-
-fun queryConfigSigningKey(db: WMDatabase): String? {
-    return find(db, "Config", "AsymmetricSigningPublicKey")?.getString("value")
-}
-
-fun queryConfigServerVersion(db: WMDatabase): String? {
-    return find(db, "Config", "Version")?.getString("value")
-}

@@ -8,7 +8,7 @@ import {useTheme} from '@context/theme';
 import {makeStyleSheetFromTheme} from '@utils/theme';
 import {typography} from '@utils/typography';
 
-import LongPressIllustration from './long_press_illustration';
+import LongPressIllustration from './long_press_illustration.svg';
 
 type Props = {
     containerStyle?: StyleProp<ViewStyle>;

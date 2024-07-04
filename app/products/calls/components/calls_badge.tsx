@@ -18,13 +18,19 @@ const styles = StyleSheet.create({
         borderRadius: 4,
     },
     loading: {
-        padding: 6,
+        paddingLeft: 8,
+        paddingRight: 8,
+        marginRight: 8,
         color: 'white',
+        height: 34,
         backgroundColor: 'rgba(255, 255, 255, 0.16)',
     },
     recording: {
-        padding: 6,
+        paddingLeft: 8,
+        paddingRight: 8,
+        marginRight: 8,
         color: 'white',
+        height: 34,
         backgroundColor: '#D24B4E',
     },
     text: {
@@ -63,13 +69,19 @@ const CallsBadge = ({type}: Props) => {
     const isRec = type === CallsBadgeType.Rec;
     const isParticipant = !(isLoading || isRec);
 
-    const text = isParticipant ? (
+    const text = isLoading || isRec ? (
+        <FormattedText
+            id={'mobile.calls_rec'}
+            defaultMessage={'rec'}
+            style={[styles.text, styles.recordingText]}
+        />
+    ) : (
         <FormattedText
             id={'mobile.calls_host'}
             defaultMessage={'host'}
             style={[styles.text, styles.recordingText]}
         />
-    ) : null;
+    );
 
     const containerStyles = [
         styles.container,
@@ -80,13 +92,13 @@ const CallsBadge = ({type}: Props) => {
     return (
         <View style={containerStyles}>
             {
-                isLoading && <Loading size={16}/>
+                isLoading && <Loading/>
             }
             {
                 isRec &&
                 <CompassIcon
                     name={'record-circle-outline'}
-                    size={16}
+                    size={12}
                     color={styles.text.color}
                 />
             }

@@ -8,8 +8,9 @@ export function isServerError(obj: unknown): obj is {server_error_id?: string} {
         typeof obj === 'object' &&
         obj !== null &&
         (
-            ('server_error_id' in obj) &&
-            typeof obj.server_error_id === 'string'
+            !('server_error_id' in obj) ||
+            typeof obj.server_error_id === 'string' ||
+            typeof obj.server_error_id === 'undefined'
         )
     );
 }
@@ -55,8 +56,11 @@ export function isErrorWithUrl(obj: unknown): obj is {url?: string} {
     return (
         typeof obj === 'object' &&
         obj !== null &&
-        ('url' in obj) &&
-        typeof obj.url === 'string'
+        (
+            !('url' in obj) ||
+            typeof obj.url === 'string' ||
+            typeof obj.url === 'undefined'
+        )
     );
 }
 

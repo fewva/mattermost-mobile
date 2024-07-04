@@ -44,8 +44,7 @@ const getStyleSheet = makeStyleSheetFromTheme((theme: Theme) => {
     return {
         animatedContainer: {
             position: 'absolute',
-            padding: 8,
-            width: '100%',
+            margin: 8,
         },
         cancelContainer: {
             alignItems: 'center',

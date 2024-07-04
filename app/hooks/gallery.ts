@@ -1,10 +1,10 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import {useCallback, useEffect} from 'react';
+import {useCallback, useEffect, useRef} from 'react';
 import {Platform} from 'react-native';
 import {
-    Easing, runOnJS, useAnimatedRef, useAnimatedStyle, useEvent,
+    Easing, makeRemote, runOnJS, useAnimatedRef, useAnimatedStyle, useEvent,
     useSharedValue,
     withTiming, type WithTimingConfig,
 } from 'react-native-reanimated';
@@ -13,6 +13,18 @@ import {useGallery} from '@context/gallery';
 
 import type {Context, GestureHandlers, OnGestureEvent} from '@typings/screens/gallery';
 import type {GestureHandlerGestureEvent} from 'react-native-gesture-handler';
+
+function useRemoteContext<T extends object>(initialValue: T) {
+    const initRef = useRef<{ context: T } | null>(null);
+    if (initRef.current === null) {
+        initRef.current = {
+            context: makeRemote(initialValue ?? {}),
+        };
+    }
+    const {context} = initRef.current;
+
+    return context;
+}
 
 function diff(context: any, name: string, value: any) {
     'worklet';
@@ -37,10 +49,9 @@ function diff(context: any, name: string, value: any) {
 }
 
 export function useCreateAnimatedGestureHandler<T extends GestureHandlerGestureEvent, TContext extends Context>(handlers: GestureHandlers<T['nativeEvent'], TContext>) {
-    const sharedContext = useSharedValue<any>({
+    const context = useRemoteContext<any>({
         __initialized: false,
     });
-
     const isAndroid = Platform.OS === 'android';
 
     const handler = (event: T['nativeEvent']) => {
@@ -52,7 +63,6 @@ export function useCreateAnimatedGestureHandler<T extends GestureHandlerGestureE
         const ACTIVE = 4;
         const END = 5;
 
-        const context = sharedContext.value;
         if (handlers.onInit && !context.__initialized) {
             context.__initialized = true;
             handlers.onInit(event, context);
@@ -148,7 +158,7 @@ export function useAnimatedGestureHandler<T extends GestureHandlerGestureEvent, 
         [],
     );
 
-    return useEvent<any, TContext>(
+    return useEvent<(event: T['nativeEvent']) => void, OnGestureEvent<T>>(
         handler, ['onGestureHandlerStateChange', 'onGestureHandlerEvent'], false,
     );
 }

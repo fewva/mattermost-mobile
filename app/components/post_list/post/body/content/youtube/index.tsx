@@ -1,17 +1,19 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import {ImageBackground} from 'expo-image';
 import React, {useCallback} from 'react';
 import {useIntl} from 'react-intl';
-import {Alert, StyleSheet, TouchableOpacity} from 'react-native';
+import {Alert, StyleSheet, TouchableOpacity, View} from 'react-native';
+import FastImage from 'react-native-fast-image';
 
+import {useTheme} from '@context/theme';
 import {useIsTablet} from '@hooks/device';
+import {emptyFunction} from '@utils/general';
 import {calculateDimensions, getViewPortWidth} from '@utils/images';
-import {changeOpacity} from '@utils/theme';
+import {changeOpacity, makeStyleSheetFromTheme} from '@utils/theme';
 import {getYouTubeVideoId, tryOpenURL} from '@utils/url';
 
-import YouTubeLogo from './youtube_logo';
+import YouTubeLogo from './youtube.svg';
 
 type YouTubeProps = {
     isReplyPost: boolean;
@@ -22,7 +24,7 @@ type YouTubeProps = {
 const MAX_YOUTUBE_IMAGE_HEIGHT = 280;
 const MAX_YOUTUBE_IMAGE_WIDTH = 500;
 
-const styles = StyleSheet.create({
+const getStyleSheet = makeStyleSheetFromTheme((theme: Theme) => ({
     imageContainer: {
         alignItems: 'flex-start',
         justifyContent: 'flex-start',
@@ -34,20 +36,31 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderRadius: 4,
         justifyContent: 'center',
-        backgroundColor: changeOpacity('#000', 0.24),
     },
-    shadow: {
+    playButton: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    playContainer: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: changeOpacity('#000', 0.24),
+        borderColor: changeOpacity(theme.centerChannelColor, 0.08),
+        borderRadius: 4,
+        borderWidth: 1,
         elevation: 3,
-        shadowColor: changeOpacity('#000', 0.8),
+        shadowColor: changeOpacity('#000', 0.08),
         shadowOffset: {width: 0, height: 2},
         shadowOpacity: 1,
         shadowRadius: 3,
     },
-});
+}));
 
 const YouTube = ({isReplyPost, layoutWidth, metadata}: YouTubeProps) => {
     const intl = useIntl();
     const isTablet = useIsTablet();
+    const theme = useTheme();
+    const styles = getStyleSheet(theme);
     const link = metadata?.embeds![0].url;
     const videoId = getYouTubeVideoId(link);
     const dimensions = calculateDimensions(
@@ -96,13 +109,17 @@ const YouTube = ({isReplyPost, layoutWidth, metadata}: YouTubeProps) => {
             style={[styles.imageContainer, {height: dimensions.height, width: dimensions.width}]}
             onPress={playYouTubeVideo}
         >
-            <ImageBackground
-                contentFit='cover'
+            <FastImage
+                onError={emptyFunction}
+                resizeMode='cover'
                 style={[styles.image, dimensions]}
                 source={{uri: imgUrl}}
-            >
-                <YouTubeLogo style={styles.shadow}/>
-            </ImageBackground>
+            />
+            <View style={styles.playContainer}>
+                <View style={styles.playButton}>
+                    <YouTubeLogo/>
+                </View>
+            </View>
         </TouchableOpacity>
     );
 };

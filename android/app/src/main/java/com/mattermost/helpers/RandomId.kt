@@ -1,6 +1,6 @@
 package com.mattermost.helpers
 
-import java.util.UUID
+import kotlin.math.floor
 
 class RandomId {
     companion object {
@@ -9,7 +9,14 @@ class RandomId {
         private const val idLength = 16
 
         fun generate(): String {
-            return UUID.randomUUID().toString()
+            var id = ""
+            for (i in 1.rangeTo((idLength / 2))) {
+                val random = floor(Math.random() * alphabetLength * alphabetLength)
+                id += alphabet[floor(random / alphabetLength).toInt()]
+                id += alphabet[(random % alphabetLength).toInt()]
+            }
+
+            return id
         }
     }
 }

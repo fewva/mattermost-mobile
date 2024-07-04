@@ -4,16 +4,17 @@
 import React, {useCallback, useMemo, useState} from 'react';
 import {Platform, View} from 'react-native';
 
-import {buildProfileImageUrlFromUser} from '@actions/remote/user';
 import ProfileImage from '@components/profile_picture';
 import {ACCOUNT_OUTLINE_IMAGE} from '@constants/profile';
 import {useServerUrl} from '@context/server';
 import {useTheme} from '@context/theme';
 import useDidUpdate from '@hooks/did_update';
+import NetworkManager from '@managers/network_manager';
 import {changeOpacity, makeStyleSheetFromTheme} from '@utils/theme';
 
 import ProfileImagePicker from './profile_image_picker';
 
+import type {Client} from '@client/rest';
 import type UserModel from '@typings/database/models/servers/user';
 
 type ChangeProfilePictureProps = {
@@ -46,18 +47,24 @@ const EditProfilePicture = ({user, onUpdateProfilePicture}: ChangeProfilePicture
     const serverUrl = useServerUrl();
     const theme = useTheme();
 
-    const [pictureUrl, setPictureUrl] = useState<string|undefined>(() => {
-        return buildProfileImageUrlFromUser(serverUrl, user);
-    });
+    let client: Client | undefined;
+
+    try {
+        client = NetworkManager.getClient(serverUrl);
+    } catch {
+        // does nothing
+    }
+
+    const [pictureUrl, setPictureUrl] = useState<string|undefined>(client?.getProfilePictureUrl(user.id, user.lastPictureUpdate));
 
     const styles = getStyleSheet(theme);
 
     useDidUpdate(() => {
-        const url = user.id ? buildProfileImageUrlFromUser(serverUrl, user) : undefined;
+        const url = user.id && client ? client.getProfilePictureUrl(user.id, user.lastPictureUpdate) : undefined;
         if (url !== pictureUrl) {
             setPictureUrl(url);
         }
-    }, [user]);
+    }, [user.id, user.lastPictureUpdate]);
 
     const handleProfileImage = useCallback((images?: FileInfo[]) => {
         let isRemoved = true;
@@ -82,7 +89,7 @@ const EditProfilePicture = ({user, onUpdateProfilePicture}: ChangeProfilePicture
             let prefix = '';
             if (pictureUrl.includes('/api/')) {
                 prefix = serverUrl;
-            } else if (Platform.OS === 'android' && !pictureUrl.startsWith('content://') && !pictureUrl.startsWith('http://') && !pictureUrl.startsWith('https://') && !pictureUrl.startsWith('file://')) {
+            } else if (Platform.OS === 'android' && !pictureUrl.startsWith('content://') && !pictureUrl.startsWith('http://') && !pictureUrl.startsWith('https://')) {
                 prefix = 'file://';
             }
 

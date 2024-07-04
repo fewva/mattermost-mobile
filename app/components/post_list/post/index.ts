@@ -154,7 +154,6 @@ const withPost = withObservables(
             post: post.observe(),
             thread: isCRTEnabled ? observeThreadById(database, post.id) : of$(undefined),
             hasReactions,
-            isLastPost: of$(!nextPost),
         };
     });
 

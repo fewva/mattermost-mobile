@@ -2,9 +2,9 @@
 // See LICENSE.txt for license information.
 
 import base64 from 'base-64';
-import {Image} from 'expo-image';
 import React, {useCallback, useMemo} from 'react';
-import {Text, View} from 'react-native';
+import {Image, Text, View} from 'react-native';
+import FastImage from 'react-native-fast-image';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {SvgXml} from 'react-native-svg';
 
@@ -120,7 +120,7 @@ const SlashSuggestionItem = ({
         );
     } else if (icon.startsWith('http')) {
         image = (
-            <Image
+            <FastImage
                 source={iconAsSource}
                 style={style.uriIcon}
             />
@@ -142,7 +142,7 @@ const SlashSuggestionItem = ({
             }
         } else {
             image = (
-                <Image
+                <FastImage
                     source={iconAsSource}
                     style={style.uriIcon}
                 />

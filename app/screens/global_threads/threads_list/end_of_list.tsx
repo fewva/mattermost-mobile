@@ -9,7 +9,7 @@ import {useTheme} from '@context/theme';
 import {makeStyleSheetFromTheme} from '@utils/theme';
 import {typography} from '@utils/typography';
 
-import SearchHintSVG from './illustrations/search_hint';
+import SearchHintSVG from './illustrations/search_hint.svg';
 
 const getStyles = makeStyleSheetFromTheme((theme: Theme) => ({
     title: {

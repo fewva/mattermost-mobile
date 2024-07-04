@@ -290,34 +290,31 @@ const Server = ({
             cancelPing = undefined;
         };
 
-        const ping = await getServerUrlAfterRedirect(pingUrl, !retryWithHttp);
-        if (!ping.url) {
+        const serverUrl = await getServerUrlAfterRedirect(pingUrl, !retryWithHttp);
+        if (!serverUrl) {
             cancelPing();
-            if (retryWithHttp) {
-                const nurl = pingUrl.replace('https:', 'http:');
-                pingServer(nurl, false);
-            } else {
-                setUrlError(getErrorMessage(ping.error, intl));
-                setButtonDisabled(true);
-                setConnecting(false);
-            }
             return;
         }
-        const result = await doPing(ping.url, true, managedConfig?.timeout ? parseInt(managedConfig?.timeout, 10) : undefined);
+        const result = await doPing(serverUrl, true, managedConfig?.timeout ? parseInt(managedConfig?.timeout, 10) : undefined);
 
         if (canceled) {
             return;
         }
 
         if (result.error) {
-            setUrlError(getErrorMessage(result.error, intl));
-            setButtonDisabled(true);
-            setConnecting(false);
+            if (retryWithHttp) {
+                const nurl = serverUrl.replace('https:', 'http:');
+                pingServer(nurl, false);
+            } else {
+                setUrlError(getErrorMessage(result.error, intl));
+                setButtonDisabled(true);
+                setConnecting(false);
+            }
             return;
         }
 
-        canReceiveNotifications(ping.url, result.canReceiveNotifications as string, intl);
-        const data = await fetchConfigAndLicense(ping.url, true);
+        canReceiveNotifications(serverUrl, result.canReceiveNotifications as string, intl);
+        const data = await fetchConfigAndLicense(serverUrl, true);
         if (data.error) {
             setButtonDisabled(true);
             setUrlError(getErrorMessage(data.error, intl));
@@ -335,7 +332,7 @@ const Server = ({
         }
 
         const server = await getServerByIdentifier(data.config.DiagnosticId);
-        const credentials = await getServerCredentials(ping.url);
+        const credentials = await getServerCredentials(serverUrl);
         setConnecting(false);
 
         if (server && server.lastActiveAt > 0 && credentials?.token) {
@@ -347,7 +344,7 @@ const Server = ({
             return;
         }
 
-        displayLogin(ping.url, data.config!, data.license!);
+        displayLogin(serverUrl, data.config!, data.license!);
     };
 
     const transform = useAnimatedStyle(() => {

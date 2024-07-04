@@ -1,8 +1,9 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import RNUtils from '@mattermost/rnutils';
-import {Platform} from 'react-native';
+import {NativeModules, Platform} from 'react-native';
+
+const {MattermostManaged} = NativeModules;
 
 type IOSDeleteDatabase = { databaseName?: string; shouldRemoveDirectory?: boolean }
 type IOSAppGroupDetails = { appGroupIdentifier: string; appGroupSharedDirectory: string; appGroupDatabase: string }
@@ -15,7 +16,7 @@ export const getIOSAppGroupDetails = (): IOSAppGroupDetails => {
     const {
         appGroupIdentifier,
         appGroupSharedDirectory: {sharedDirectory, databasePath},
-    } = RNUtils.getConstants();
+    } = MattermostManaged.getConstants();
 
     const appGroup = {
         appGroupIdentifier,
@@ -36,11 +37,11 @@ export const getIOSAppGroupDetails = (): IOSAppGroupDetails => {
  * MattermostManaged.deleteDatabaseDirectory(databaseName, shouldRemoveDirectory, (error: any, success: any) => {    });
  */
 export const deleteIOSDatabase = async ({
-    databaseName = '',
+    databaseName = undefined,
     shouldRemoveDirectory = false,
 }: IOSDeleteDatabase) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    return RNUtils.deleteDatabaseDirectory(databaseName, shouldRemoveDirectory);
+    return MattermostManaged.deleteDatabaseDirectory(databaseName, shouldRemoveDirectory, () => null);
 };
 
 /**
@@ -49,13 +50,17 @@ export const deleteIOSDatabase = async ({
  * @param {string} to new database name
  */
 export const renameIOSDatabase = (from: string, to: string) => {
-    return RNUtils.renameDatabase(from, to);
+    MattermostManaged.renameDatabase(from, to, () => null);
 };
 
-export const deleteEntitiesFile = () => {
+export const deleteEntititesFile = (callback?: (success: boolean) => void) => {
     if (Platform.OS === 'ios') {
-        return RNUtils.deleteEntitiesFile();
+        MattermostManaged.deleteEntititesFile((result: boolean) => {
+            if (callback) {
+                callback(result);
+            }
+        });
+    } else if (callback) {
+        callback(true);
     }
-
-    return Promise.resolve(true);
 };

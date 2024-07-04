@@ -30,7 +30,6 @@ import {
     DefaultCall,
     DefaultCurrentCall,
     type IncomingCallNotification,
-    type LiveCaptionMobile,
     type ReactionStreamEmoji,
 } from '@calls/types/calls';
 import {Calls, General, Screens} from '@constants';
@@ -39,10 +38,9 @@ import {getChannelById} from '@queries/servers/channel';
 import {getThreadById} from '@queries/servers/thread';
 import {getUserById} from '@queries/servers/user';
 import {isDMorGM} from '@utils/channel';
-import {generateId} from '@utils/general';
 import {logDebug} from '@utils/log';
 
-import type {CallJobState, LiveCaptionData, UserReactionData} from '@mattermost/calls/lib/types';
+import type {CallRecordingState, UserReactionData} from '@mattermost/calls/lib/types';
 
 export const setCalls = async (serverUrl: string, myUserId: string, calls: Dictionary<Call>, enabled: Dictionary<boolean>) => {
     const channelsWithCalls = Object.keys(calls).reduce(
@@ -184,16 +182,15 @@ export const removeIncomingCall = (serverUrl: string, callId: string, channelId?
     setCallsState(serverUrl, {...callsState, calls: nextCalls});
 };
 
-export const setCallForChannel = (serverUrl: string, channelId: string, call?: Call, enabled?: boolean) => {
+export const setCallForChannel = (serverUrl: string, channelId: string, enabled?: boolean, call?: Call) => {
     const callsState = getCallsState(serverUrl);
     let nextEnabled = callsState.enabled;
     if (typeof enabled !== 'undefined') {
         nextEnabled = {...callsState.enabled, [channelId]: enabled};
     }
 
-    let nextCalls = callsState.calls;
+    const nextCalls = {...callsState.calls};
     if (call) {
-        nextCalls = {...callsState.calls};
         nextCalls[channelId] = call;
 
         // In case we got a complete update on the currentCall
@@ -565,14 +562,6 @@ export const setSpeakerPhone = (speakerphoneOn: boolean) => {
     }
 };
 
-export const setJoiningChannelId = (joiningChannelId: string | null) => {
-    const globalCallsState = getGlobalCallsState();
-    setGlobalCallsState({
-        ...globalCallsState,
-        joiningChannelId,
-    });
-};
-
 export const setAudioDeviceInfo = (info: AudioDeviceInfo) => {
     const call = getCurrentCall();
     if (call) {
@@ -689,7 +678,7 @@ const userReactionTimeout = (serverUrl: string, channelId: string, reaction: Use
     setCurrentCall(nextCurrentCall);
 };
 
-export const setRecordingState = (serverUrl: string, channelId: string, recState: CallJobState) => {
+export const setRecordingState = (serverUrl: string, channelId: string, recState: CallRecordingState) => {
     const callsState = getCallsState(serverUrl);
     if (!callsState.calls[channelId]) {
         return;
@@ -713,29 +702,6 @@ export const setRecordingState = (serverUrl: string, channelId: string, recState
     const nextCurrentCall = {
         ...currentCall,
         recState,
-    };
-    setCurrentCall(nextCurrentCall);
-};
-
-export const setCaptioningState = (serverUrl: string, channelId: string, capState: CallJobState) => {
-    const callsState = getCallsState(serverUrl);
-    if (!callsState.calls[channelId]) {
-        return;
-    }
-
-    const nextCall = {...callsState.calls[channelId], capState};
-    const nextCalls = {...callsState.calls, [channelId]: nextCall};
-    setCallsState(serverUrl, {...callsState, calls: nextCalls});
-
-    // Was it the current call? If so, update that too.
-    const currentCall = getCurrentCall();
-    if (!currentCall || currentCall.channelId !== channelId) {
-        return;
-    }
-
-    const nextCurrentCall = {
-        ...currentCall,
-        capState,
     };
     setCurrentCall(nextCurrentCall);
 };
@@ -815,58 +781,6 @@ export const setCallQualityAlertDismissed = () => {
         ...currentCall,
         callQualityAlert: false,
         callQualityAlertDismissed: Date.now(),
-    };
-    setCurrentCall(nextCurrentCall);
-};
-
-export const receivedCaption = (serverUrl: string, captionData: LiveCaptionData) => {
-    const channelId = captionData.channel_id;
-
-    // Ignore if we're not in that channel's call.
-    const currentCall = getCurrentCall();
-    if (currentCall?.channelId !== channelId) {
-        return;
-    }
-
-    // Add or replace that user's caption.
-    const captionId = generateId();
-    const nextCaptions = {...currentCall.captions};
-    const newCaption: LiveCaptionMobile = {
-        captionId,
-        sessionId: captionData.session_id,
-        userId: captionData.user_id,
-        text: captionData.text,
-    };
-    nextCaptions[captionData.session_id] = newCaption;
-
-    const nextCurrentCall: CurrentCall = {
-        ...currentCall,
-        captions: nextCaptions,
-    };
-    setCurrentCall(nextCurrentCall);
-
-    setTimeout(() => {
-        receivedCaptionTimeout(serverUrl, channelId, newCaption);
-    }, Calls.CAPTION_TIMEOUT);
-};
-
-const receivedCaptionTimeout = (serverUrl: string, channelId: string, caption: LiveCaptionMobile) => {
-    const currentCall = getCurrentCall();
-    if (currentCall?.channelId !== channelId) {
-        return;
-    }
-
-    // Remove the caption only if it hasn't been replaced by a newer one
-    if (currentCall.captions[caption.sessionId]?.captionId !== caption.captionId) {
-        return;
-    }
-
-    const nextCaptions = {...currentCall.captions};
-    delete nextCaptions[caption.sessionId];
-
-    const nextCurrentCall: CurrentCall = {
-        ...currentCall,
-        captions: nextCaptions,
     };
     setCurrentCall(nextCurrentCall);
 };

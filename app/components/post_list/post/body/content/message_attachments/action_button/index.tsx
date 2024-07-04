@@ -1,8 +1,8 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import {Button} from '@rneui/base';
 import React, {useCallback, useRef} from 'react';
+import Button from 'react-native-button';
 
 import {postActionWithCookie} from '@actions/remote/integrations';
 import {useServerUrl} from '@context/server';
@@ -26,7 +26,6 @@ const getStyleSheet = makeStyleSheetFromTheme((theme: Theme) => {
     const STATUS_COLORS = getStatusColors(theme);
     return {
         button: {
-            backgroundColor: 'transparent',
             borderRadius: 4,
             borderColor: changeOpacity(STATUS_COLORS.default, 0.25),
             borderWidth: 2,
@@ -72,8 +71,8 @@ const ActionButton = ({buttonColor, cookie, disabled, id, name, postId, theme}: 
 
     return (
         <Button
-            buttonStyle={[style.button, customButtonStyle]}
-            disabledStyle={style.buttonDisabled}
+            containerStyle={[style.button, customButtonStyle]}
+            disabledContainerStyle={style.buttonDisabled}
             onPress={onPress}
             disabled={disabled}
         >
