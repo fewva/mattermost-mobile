@@ -30,6 +30,7 @@ import NetworkManager from '@managers/network_manager';
 import {queryAllActiveServers} from '@queries/app/servers';
 import {getFullErrorMessage} from '@utils/errors';
 
+import type {CallSession} from '@calls/types/calls';
 import type {Client} from '@client/rest';
 
 export const useTryCallsFunction = (fn: () => void) => {

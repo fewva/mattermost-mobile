@@ -29,6 +29,7 @@ type Props = {
     teammateNameDisplay?: string;
     limitRestrictedInfo?: LimitRestrictedInfo;
     ccChannelId?: string;
+    joiningChannelId: string | null;
 }
 
 const getStyleSheet = makeStyleSheetFromTheme((theme: Theme) => {
