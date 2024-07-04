@@ -2,10 +2,9 @@
 // See LICENSE.txt for license information.
 
 import TurboLogger from '@mattermost/react-native-turbo-log';
-import {nativeApplicationVersion, nativeBuildVersion} from 'expo-application';
-import {deviceName} from 'expo-device';
 import React from 'react';
 import {Alert, Platform} from 'react-native';
+import DeviceInfo from 'react-native-device-info';
 import Share from 'react-native-share';
 
 import SettingItem from '@components/settings/item';
@@ -26,6 +25,10 @@ const ReportProblem = ({buildNumber, currentTeamId, currentUserId, siteName, sup
     const theme = useTheme();
 
     const openEmailClient = preventDoubleTap(async () => {
+        const appVersion = DeviceInfo.getVersion();
+        const appBuild = DeviceInfo.getBuildNumber();
+        const deviceId = DeviceInfo.getDeviceId();
+
         try {
             const logPaths = await TurboLogger.getLogPaths();
             const attachments = logPaths.map((path) => pathWithPrefix('file://', path));
@@ -39,9 +42,9 @@ const ReportProblem = ({buildNumber, currentTeamId, currentUserId, siteName, sup
                     `Current User Id: ${currentUserId}`,
                     `Current Team Id: ${currentTeamId}`,
                     `Server Version: ${version} (Build ${buildNumber})`,
-                    `App Version: ${nativeApplicationVersion} (Build ${nativeBuildVersion})`,
+                    `App Version: ${appVersion} (Build ${appBuild})`,
                     `App Platform: ${Platform.OS}`,
-                    `Device Model: ${deviceName}`,
+                    `Device Model: ${deviceId}`,
                 ].join('\n'),
             });
         } catch (e: any) {

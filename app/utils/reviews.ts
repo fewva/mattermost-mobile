@@ -1,7 +1,6 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
-
-import {isAvailableAsync} from 'expo-store-review';
+import InAppReview from 'react-native-in-app-review';
 
 import {storeFirstLaunch} from '@actions/app/global';
 import LocalConfig from '@assets/config.json';
@@ -23,8 +22,7 @@ export const tryRunAppReview = async (launchType: string, coldStart?: boolean) =
         return;
     }
 
-    const isAvailable = await isAvailableAsync();
-    if (!isAvailable) {
+    if (!InAppReview.isAvailable()) {
         return;
     }
 

@@ -4,8 +4,8 @@
 import {Database, Q} from '@nozbe/watermelondb';
 import LokiJSAdapter from '@nozbe/watermelondb/adapters/lokijs';
 import logger from '@nozbe/watermelondb/utils/common/logger';
-import {deleteAsync} from 'expo-file-system';
 import {DeviceEventEmitter, Platform} from 'react-native';
+import FileSystem from 'react-native-fs';
 
 import {DatabaseType, MIGRATION_EVENTS, MM_TABLES} from '@constants/database';
 import AppDatabaseMigrations from '@database/migration/app';
@@ -297,13 +297,13 @@ class DatabaseManager {
         const databaseJournal = `${androidFilesDir}${databaseName}.db-journal`;
 
         try {
-            await deleteAsync(databaseFile);
+            await FileSystem.unlink(databaseFile);
         } catch {
             // do nothing
         }
 
         try {
-            await deleteAsync(databaseJournal);
+            await FileSystem.unlink(databaseJournal);
         } catch {
             // do nothing
         }
@@ -319,7 +319,7 @@ class DatabaseManager {
 
             // On Android, we'll remove the databases folder under the Document Directory
             const androidFilesDir = `${this.databaseDirectory}databases/`;
-            await deleteAsync(androidFilesDir);
+            await FileSystem.unlink(androidFilesDir);
             return true;
         } catch (e) {
             return false;

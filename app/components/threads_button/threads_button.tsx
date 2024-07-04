@@ -39,7 +39,9 @@ const getStyleSheet = makeStyleSheetFromTheme((theme: Theme) => ({
 
 type Props = {
     currentChannelId: string;
+    groupUnreadsSeparately: boolean;
     onCenterBg?: boolean;
+    onlyUnreads: boolean;
     onPress?: () => void;
     shouldHighlighActive?: boolean;
     unreadsAndMentions: {
@@ -51,7 +53,9 @@ type Props = {
 
 const ThreadsButton = ({
     currentChannelId,
+    groupUnreadsSeparately,
     onCenterBg,
+    onlyUnreads,
     onPress,
     unreadsAndMentions,
     shouldHighlighActive = false,
@@ -108,6 +112,10 @@ const ThreadsButton = ({
 
         return [container, icon, text, badge];
     }, [customStyles, isActive, onCenterBg, styles, unreads, isOnHome]);
+
+    if (groupUnreadsSeparately && (onlyUnreads && !isActive && !unreads && !mentions)) {
+        return null;
+    }
 
     return (
         <TouchableOpacity

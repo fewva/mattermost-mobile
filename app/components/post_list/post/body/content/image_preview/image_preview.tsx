@@ -2,8 +2,7 @@
 // See LICENSE.txt for license information.
 
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {StyleSheet, TouchableWithoutFeedback, View} from 'react-native';
-import Animated from 'react-native-reanimated';
+import {Animated, StyleSheet, TouchableWithoutFeedback, View} from 'react-native';
 
 import {getRedirectLocation} from '@actions/remote/general';
 import FileIcon from '@components/files/file_icon';
@@ -125,7 +124,7 @@ const ImagePreview = ({expandedLink, isReplyPost, layoutWidth, link, location, m
                             id={fileId}
                             imageUri={imageUrl}
                             onError={onError}
-                            contentFit='contain'
+                            resizeMode='contain'
                             style={[style.image, {width: dimensions.width, height: dimensions.height}]}
                         />
                     </Animated.View>

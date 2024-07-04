@@ -1,9 +1,9 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import {Button} from '@rneui/base';
 import React from 'react';
 import {Text} from 'react-native';
+import Button from 'react-native-button';
 
 import {useTheme} from '@context/theme';
 import {changeOpacity, makeStyleSheetFromTheme} from '@utils/theme';
@@ -14,8 +14,6 @@ const getStyleFromTheme = makeStyleSheetFromTheme((theme) => {
         button: {
             alignItems: 'center',
             borderRadius: 4,
-            backgroundColor: 'transparent',
-            padding: 0,
         },
         text: {
             paddingHorizontal: 12,
@@ -46,7 +44,7 @@ const SelectButton = ({selected, onPress, text}: ButtonProps) => {
 
     return (
         <Button
-            buttonStyle={[styles.button, selected && styles.selectedButton]}
+            containerStyle={[styles.button, selected && styles.selectedButton]}
             onPress={onPress}
         >
             <Text

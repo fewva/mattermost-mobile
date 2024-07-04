@@ -40,7 +40,6 @@ public class Database: NSObject {
     internal var defaultDB: OpaquePointer? = nil
     
     internal var serversTable = Table("Servers")
-    internal var globalTable = Table("Global")
     internal var systemTable = Table("System")
     internal var teamTable = Table("Team")
     internal var myTeamTable = Table("MyTeam")
@@ -87,7 +86,20 @@ public class Database: NSObject {
     }
     
     public func generateId() -> String {
-        return UUID().uuidString.lowercased()
+        let alphabet = Array("0123456789abcdefghijklmnopqrstuvwxyz")
+        let alphabetLenght = alphabet.count
+        let idLenght = 16
+        var id = ""
+
+        for _ in 1...(idLenght / 2) {
+            let random = floor(Double.random(in: 0..<1) * Double(alphabetLenght) * Double(alphabetLenght))
+            let firstIndex = Int(floor(random / Double(alphabetLenght)))
+            let lastIndex = Int(random) % alphabetLenght
+            id += String(alphabet[firstIndex])
+            id += String(alphabet[lastIndex])
+        }
+        
+        return id
     }
     
     public func getOnlyServerUrl() throws -> String {

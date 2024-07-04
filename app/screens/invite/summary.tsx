@@ -1,10 +1,10 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import {Button} from '@rneui/base';
 import React, {useCallback, useMemo} from 'react';
 import {useIntl} from 'react-intl';
 import {View, Text, ScrollView} from 'react-native';
+import Button from 'react-native-button';
 
 import CompassIcon from '@components/compass_icon';
 import FormattedText from '@components/formatted_text';
@@ -89,7 +89,6 @@ const getStyleSheet = makeStyleSheetFromTheme((theme: Theme) => {
             color: theme.buttonColor,
 
         },
-        summaryButtonContainerStyle: {flexGrow: 1},
     };
 });
 
@@ -220,8 +219,7 @@ export default function Summary({
 
         return (
             <Button
-                containerStyle={styles.summaryButtonContainerStyle}
-                buttonStyle={styleButtonBackground}
+                containerStyle={[styleButtonBackground, {flexGrow: 1}]}
                 onPress={onPress}
                 testID={`invite.summary_button.${SummaryButtonType.RETRY}`}
             >

@@ -5,8 +5,6 @@ import {createElement, isValidElement} from 'react';
 import {useIntl} from 'react-intl';
 import {type StyleProp, Text, type TextProps, type TextStyle} from 'react-native';
 
-import {generateId} from '@utils/general';
-
 type FormattedTextProps = TextProps & {
     id: string;
     defaultMessage?: string;
@@ -26,7 +24,7 @@ const FormattedText = (props: FormattedTextProps) => {
     if (values && Object.keys(values).length > 0) {
         // Creates a token with a random UID that should not be guessable or
         // conflict with other parts of the `message` string.
-        const uid = generateId();
+        const uid = Math.floor(Math.random() * 0x10000000000).toString(16);
 
         const generateToken = (() => {
             let counter = 0;

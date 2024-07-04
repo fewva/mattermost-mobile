@@ -2,13 +2,14 @@
 // See LICENSE.txt for license information.
 
 import {withDatabase, withObservables} from '@nozbe/watermelondb/react';
-import {Image} from 'expo-image';
 import React from 'react';
 import {
+    Image,
     Platform,
     StyleSheet,
     Text,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import {of as of$} from 'rxjs';
 import {switchMap} from 'rxjs/operators';
 
@@ -126,11 +127,11 @@ const Emoji = (props: EmojiProps) => {
     const key = Platform.OS === 'android' ? (`${imageUrl}-${height}-${width}`) : null;
 
     return (
-        <Image
+        <FastImage
             key={key}
             style={[commonStyle, imageStyle, {width, height}]}
             source={{uri: imageUrl}}
-            contentFit='contain'
+            resizeMode={FastImage.resizeMode.contain}
             testID={testID}
         />
     );

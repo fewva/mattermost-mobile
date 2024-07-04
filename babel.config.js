@@ -2,9 +2,9 @@
 // See LICENSE.txt for license information.
 module.exports = {
     presets: [
-        ['@babel/preset-env', {targets: {node: 'current'}}],
-        'module:@react-native/babel-preset',
+        'module:metro-react-native-babel-preset',
         '@babel/preset-typescript',
+        ['@babel/preset-env', {targets: {node: 'current'}}],
     ],
     plugins: [
         '@babel/plugin-transform-runtime',
@@ -28,6 +28,7 @@ module.exports = {
                 '@i18n': './app/i18n',
                 '@init': './app/init',
                 '@managers': './app/managers',
+                '@notifications': './app/notifications',
                 '@queries': './app/queries',
                 '@screens': './app/screens',
                 '@share': './share_extension',

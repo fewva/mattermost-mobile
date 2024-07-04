@@ -2,10 +2,10 @@
 // See LICENSE.txt for license information.
 
 import {BottomSheetScrollView} from '@gorhom/bottom-sheet';
-import {Button} from '@rneui/base';
 import React, {useCallback, useMemo} from 'react';
 import {useIntl} from 'react-intl';
 import {ScrollView, Text, View} from 'react-native';
+import Button from 'react-native-button';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 import {dismissAnnouncement} from '@actions/local/systems';
@@ -110,7 +110,7 @@ const ExpandedAnnouncementBanner = ({
                 />
             </Scroll>
             <Button
-                buttonStyle={buttonStyles.okay.button}
+                containerStyle={buttonStyles.okay.button}
                 onPress={close}
             >
                 <FormattedText
@@ -121,7 +121,7 @@ const ExpandedAnnouncementBanner = ({
             </Button>
             {allowDismissal && (
                 <Button
-                    buttonStyle={buttonStyles.dismiss.button}
+                    containerStyle={buttonStyles.dismiss.button}
                     onPress={dismissBanner}
                 >
                     <FormattedText

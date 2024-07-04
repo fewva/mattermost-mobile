@@ -15,51 +15,56 @@ const MAX_WEBSOCKET_FAILS = 7;
 const WEBSOCKET_TIMEOUT = toMilliseconds({seconds: 30});
 const MIN_WEBSOCKET_RETRY_TIME = toMilliseconds({seconds: 3});
 const MAX_WEBSOCKET_RETRY_TIME = toMilliseconds({minutes: 5});
-const DEFAULT_OPTIONS = {
-    forceConnection: true,
-};
 
 export default class WebSocketClient {
     private conn?: WebSocketClientInterface;
     private connectionTimeout: NodeJS.Timeout | undefined;
-    private connectionId = '';
+    private connectionId: string;
     private token: string;
-    private stop = false;
-    private url = '';
-    private serverUrl: string;
-    private connectFailCount = 0;
-
-    // The first time we connect to a server (on init or login)
-    // we do the sync out of the websocket lifecycle.
-    // This is used to avoid calling twice to the sync logic.
-    private shouldSkipSync = false;
 
     // responseSequence is the number to track a response sent
     // via the websocket. A response will always have the same sequence number
     // as the request.
-    private responseSequence = 1;
+    private responseSequence: number;
 
     // serverSequence is the incrementing sequence number from the
     // server-sent event stream.
-    private serverSequence = 0;
-
-    // Callbacks
+    private serverSequence: number;
+    private connectFailCount: number;
     private eventCallback?: Function;
     private firstConnectCallback?: () => void;
     private missedEventsCallback?: () => void;
     private reconnectCallback?: () => void;
     private reliableReconnectCallback?: () => void;
     private errorCallback?: Function;
-    private closeCallback?: (connectFailCount: number) => void;
+    private closeCallback?: (connectFailCount: number, lastDisconnect: number) => void;
     private connectingCallback?: () => void;
+    private stop: boolean;
+    private lastConnect: number;
+    private lastDisconnect: number;
+    private url = '';
 
-    constructor(serverUrl: string, token: string) {
+    private serverUrl: string;
+    private hasReliablyReconnect = false;
+
+    constructor(serverUrl: string, token: string, lastDisconnect = 0) {
+        this.connectionId = '';
         this.token = token;
+        this.responseSequence = 1;
+        this.serverSequence = 0;
+        this.connectFailCount = 0;
+        this.stop = false;
         this.serverUrl = serverUrl;
+        this.lastConnect = 0;
+        this.lastDisconnect = lastDisconnect;
     }
 
-    public async initialize(opts = {}, shouldSkipSync = false) {
-        const {forceConnection} = Object.assign({}, DEFAULT_OPTIONS, opts);
+    public async initialize(opts = {}) {
+        const defaults = {
+            forceConnection: true,
+        };
+
+        const {forceConnection} = Object.assign({}, defaults, opts);
 
         if (forceConnection) {
             this.stop = false;
@@ -109,18 +114,16 @@ export default class WebSocketClient {
 
         // Manually changing protocol since getOrCreateWebsocketClient does not accept http/s
         if (this.url.startsWith('https:')) {
-            this.url = 'wss:' + this.url.substring('https:'.length);
+            this.url = 'wss:' + this.url.substr('https:'.length);
         }
 
         if (this.url.startsWith('http:')) {
-            this.url = 'ws:' + this.url.substring('http:'.length);
+            this.url = 'ws:' + this.url.substr('http:'.length);
         }
 
         if (this.connectFailCount === 0) {
             logInfo('websocket connecting to ' + this.url);
         }
-
-        this.shouldSkipSync = shouldSkipSync;
 
         try {
             const headers: ClientHeaders = {origin};
@@ -136,7 +139,9 @@ export default class WebSocketClient {
                 // In case turning on/off Wi-fi on Samsung devices
                 // the websocket will call onClose then onError then initialize again with readyState CLOSED, we need to open it again
                 if (this.conn.readyState === WebSocketReadyState.CLOSED) {
-                    clearTimeout(this.connectionTimeout);
+                    if (this.connectionTimeout) {
+                        clearTimeout(this.connectionTimeout);
+                    }
                     this.conn.open();
                 }
                 return;
@@ -147,7 +152,7 @@ export default class WebSocketClient {
         }
 
         this.conn!.onOpen(() => {
-            clearTimeout(this.connectionTimeout);
+            this.lastConnect = Date.now();
 
             // No need to reset sequence number here.
             if (!reliableWebSockets) {
@@ -160,35 +165,34 @@ export default class WebSocketClient {
                 this.sendMessage('authentication_challenge', {token: this.token});
             }
 
-            if (this.shouldSkipSync) {
-                logInfo('websocket connected to', this.url);
-                this.firstConnectCallback?.();
-            } else {
+            if (this.connectFailCount > 0) {
                 logInfo('websocket re-established connection to', this.url);
                 if (!reliableWebSockets && this.reconnectCallback) {
                     this.reconnectCallback();
                 } else if (reliableWebSockets) {
-                    // If a sync is needed, it is handled when receiving the HELLO websocket message
                     this.reliableReconnectCallback?.();
                     if (this.serverSequence && this.missedEventsCallback) {
                         this.missedEventsCallback();
                     }
+                    this.hasReliablyReconnect = true;
                 }
+            } else if (this.firstConnectCallback) {
+                logInfo('websocket connected to', this.url);
+                this.firstConnectCallback();
             }
 
             this.connectFailCount = 0;
         });
 
         this.conn!.onClose(() => {
-            clearTimeout(this.connectionTimeout);
+            const now = Date.now();
+            if (this.lastDisconnect < this.lastConnect) {
+                this.lastDisconnect = now;
+            }
+
             this.conn = undefined;
             this.responseSequence = 1;
-
-            // We skip the sync on first connect, since we are syncing along
-            // the init logic. If the connection closes at any point after that,
-            // we don't want to skip the sync. If we keep the same connection and
-            // reliable websockets are enabled this won't trigger a new sync.
-            this.shouldSkipSync = false;
+            this.hasReliablyReconnect = false;
 
             if (this.connectFailCount === 0) {
                 logInfo('websocket closed', this.url);
@@ -197,7 +201,7 @@ export default class WebSocketClient {
             this.connectFailCount++;
 
             if (this.closeCallback) {
-                this.closeCallback(this.connectFailCount);
+                this.closeCallback(this.connectFailCount, this.lastDisconnect);
             }
 
             if (this.stop) {
@@ -208,13 +212,22 @@ export default class WebSocketClient {
 
             // If we've failed a bunch of connections then start backing off
             if (this.connectFailCount > MAX_WEBSOCKET_FAILS) {
-                retryTime = Math.min(MIN_WEBSOCKET_RETRY_TIME * this.connectFailCount, MAX_WEBSOCKET_RETRY_TIME);
+                retryTime = MIN_WEBSOCKET_RETRY_TIME * this.connectFailCount;
+                if (retryTime > MAX_WEBSOCKET_RETRY_TIME) {
+                    retryTime = MAX_WEBSOCKET_RETRY_TIME;
+                }
+            }
+
+            if (this.connectionTimeout) {
+                clearTimeout(this.connectionTimeout);
             }
 
             this.connectionTimeout = setTimeout(
                 () => {
                     if (this.stop) {
-                        clearTimeout(this.connectionTimeout);
+                        if (this.connectionTimeout) {
+                            clearTimeout(this.connectionTimeout);
+                        }
                         return;
                     }
                     this.initialize(opts);
@@ -225,6 +238,7 @@ export default class WebSocketClient {
 
         this.conn!.onError((evt: any) => {
             if (evt.url === this.url) {
+                this.hasReliablyReconnect = false;
                 if (this.connectFailCount <= 1) {
                     logError('websocket error', this.url);
                     logError('WEBSOCKET ERROR EVENT', evt);
@@ -249,7 +263,7 @@ export default class WebSocketClient {
             } else if (this.eventCallback) {
                 if (reliableWebSockets) {
                     // We check the hello packet, which is always the first packet in a stream.
-                    if (msg.event === WebsocketEvents.HELLO) {
+                    if (msg.event === WebsocketEvents.HELLO && this.reconnectCallback) {
                         logInfo(this.url, 'got connection id ', msg.data.connection_id);
 
                         // If we already have a connectionId present, and server sends a different one,
@@ -257,16 +271,14 @@ export default class WebSocketClient {
                         // If the server is not available the first time we try to connect, we won't have a connection id
                         // but still we need to sync.
                         // Then we do the sync calls, and reset sequence number to 0.
-                        if (this.connectionId !== msg.data.connection_id) {
-                            if (this.connectionId) {
-                                logInfo(this.url, 'got a new connection due to long timeout, or server restart, or sequence number is not found');
-                            } else {
-                                logInfo(this.url, 'got the expected new connection id');
-                            }
-                            if (!this.shouldSkipSync) {
-                                this.reconnectCallback?.();
-                            }
+                        if (
+                            (this.connectionId !== '' && this.connectionId !== msg.data.connection_id) ||
+                            (this.hasReliablyReconnect && this.connectionId === '')
+                        ) {
+                            logInfo(this.url, 'long timeout, or server restart, or sequence number is not found, or first connect after failure.');
+                            this.reconnectCallback();
                             this.serverSequence = 0;
+                            this.hasReliablyReconnect = false;
                         }
 
                         // If it's a fresh connection, we have to set the connectionId regardless.
@@ -278,13 +290,16 @@ export default class WebSocketClient {
                     // we just disconnect and reconnect.
                     if (msg.seq !== this.serverSequence) {
                         logInfo(this.url, 'missed websocket event, act_seq=' + msg.seq + ' exp_seq=' + this.serverSequence);
-                        this.connectionId = ''; // There was some problem with the sequence number, so we reset the connection
-                        this.close(false); // Will auto-reconnect after MIN_WEBSOCKET_RETRY_TIME.
+
+                        // We are not calling this.close() because we need to auto-restart.
+                        this.connectFailCount = 0;
+                        this.responseSequence = 1;
+                        this.conn?.close(); // Will auto-reconnect after MIN_WEBSOCKET_RETRY_TIME.
                         return;
                     }
-                } else if (msg.seq !== this.serverSequence) {
+                } else if (msg.seq !== this.serverSequence && this.reconnectCallback) {
                     logInfo(this.url, 'missed websocket event, act_seq=' + msg.seq + ' exp_seq=' + this.serverSequence);
-                    this.reconnectCallback?.();
+                    this.reconnectCallback();
                 }
 
                 this.serverSequence = msg.seq + 1;
@@ -323,7 +338,7 @@ export default class WebSocketClient {
         this.errorCallback = callback;
     }
 
-    public setCloseCallback(callback: (connectFailCount: number) => void) {
+    public setCloseCallback(callback: (connectFailCount: number, lastDisconnect: number) => void) {
         this.closeCallback = callback;
     }
 
@@ -331,12 +346,14 @@ export default class WebSocketClient {
         this.stop = stop;
         this.connectFailCount = 0;
         this.responseSequence = 1;
-        clearTimeout(this.connectionTimeout);
-        this.conn?.close();
+        this.hasReliablyReconnect = false;
+
+        if (this.conn && this.conn.readyState === WebSocketReadyState.OPEN) {
+            this.conn.close();
+        }
     }
 
     public invalidate() {
-        clearTimeout(this.connectionTimeout);
         this.conn?.invalidate();
         this.conn = undefined;
     }
@@ -364,6 +381,6 @@ export default class WebSocketClient {
     }
 
     public isConnected(): boolean {
-        return this.conn?.readyState === WebSocketReadyState.OPEN;
+        return this.conn?.readyState === WebSocketReadyState.OPEN; //|| (!this.stop && this.connectFailCount <= 2);
     }
 }
